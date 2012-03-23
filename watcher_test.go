@@ -18,15 +18,24 @@ func withCreate(action func(string)) {
   os.Remove(dummyfile)
 }
 
+func assertReceivedEvents(t *testing.T, expectingEvents bool, ch chan []PathEvent) {
+  select {
+  case <-ch:
+    if !expectingEvents {
+      t.Errorf("should have timed out, but got some file event")
+    }
+  case <-time.After(time.Second * 1):
+    if expectingEvents {
+      t.Errorf("should have got some file event, but timed out")
+    }
+  }
+}
+
 func TestFileChanges(t *testing.T) {
   ch := WatchPaths([]string{"."})
 
   withCreate(func(dummyfile string) {
-    select {
-    case <-ch:
-    case <-time.After(time.Second * 2):
-      t.Errorf("timed out")
-    }
+    assertReceivedEvents(t, true, ch)
   })
 }
 
@@ -50,10 +59,6 @@ func TestOnlyWatchesSpecifiedPaths(t *testing.T) {
   ch := WatchPaths([]string{"imaginaryfile"})
 
   withCreate(func(dummyfile string) {
-    select {
-    case <-ch:
-      t.Errorf("should have timed out, but got some file event")
-    case <-time.After(time.Second * 1):
-    }
+    assertReceivedEvents(t, false, ch)
   })
 }
