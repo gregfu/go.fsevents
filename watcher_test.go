@@ -4,9 +4,9 @@ import "testing"
 import "github.com/sdegutis/assert"
 
 import (
-  "time"
   "os"
   "path/filepath"
+  "time"
 )
 
 func withCreate(action func(string)) {
@@ -37,7 +37,7 @@ func TestEventFlags(t *testing.T) {
     select {
     case events := <-ch:
       assert.Equals(t, len(events), 1)
-      assert.True(t, events[0].Flags & FlagItemCreated != 0)
+      assert.True(t, events[0].Flags&FlagItemCreated != 0)
     case <-time.After(time.Second * 1):
       t.Errorf("should have got some file event, but timed out")
     }

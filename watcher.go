@@ -11,9 +11,9 @@ import "unsafe"
 
 const (
   FlagUnmount = uint32(C.kFSEventStreamEventFlagUnmount)
-  FlagMount = uint32(C.kFSEventStreamEventFlagMount)
+  FlagMount   = uint32(C.kFSEventStreamEventFlagMount)
 
-  FlagItemCreated = uint32(C.kFSEventStreamEventFlagItemCreated)
+  FlagItemCreated       = uint32(C.kFSEventStreamEventFlagItemCreated)
   FlagItemRemoved       = uint32(C.kFSEventStreamEventFlagItemRemoved)
   FlagItemInodeMetaMod  = uint32(C.kFSEventStreamEventFlagItemInodeMetaMod)
   FlagItemRenamed       = uint32(C.kFSEventStreamEventFlagItemRenamed)
@@ -34,7 +34,7 @@ type watchingInfo struct {
 var watchers = make(map[C.FSEventStreamRef]watchingInfo)
 
 type PathEvent struct {
-  Path string
+  Path  string
   Flags uint32
 }
 
@@ -48,9 +48,9 @@ func Unwatch(ch chan []PathEvent) {
 }
 
 func WatchPaths(paths []string) chan []PathEvent {
-  type watchSuccessData struct{
+  type watchSuccessData struct {
     runloop C.CFRunLoopRef
-    stream C.FSEventStreamRef
+    stream  C.FSEventStreamRef
   }
 
   successChan := make(chan *watchSuccessData)
@@ -69,7 +69,7 @@ func WatchPaths(paths []string) chan []PathEvent {
     if ok {
       successChan <- &watchSuccessData{
         runloop: C.CFRunLoopGetCurrent(),
-        stream: stream,
+        stream:  stream,
       }
       C.CFRunLoopRun()
     } else {
@@ -105,7 +105,7 @@ func watchDirsCallback(stream C.FSEventStreamRef, count C.size_t, paths **C.char
     flag := uint32(cflag)
 
     events = append(events, PathEvent{
-      Path: path,
+      Path:  path,
       Flags: flag,
     })
   }
