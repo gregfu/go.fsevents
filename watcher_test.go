@@ -4,7 +4,6 @@ import "testing"
 
 import (
   "time"
-  "fmt"
   "os"
 )
 
@@ -17,9 +16,7 @@ func TestFileChanges(t *testing.T) {
 
   select {
   case <-ch:
-    fmt.Println("woot!")
   case <-time.After(time.Second * 2):
-    fmt.Println("aww")
     t.Errorf("timed out")
   }
 
