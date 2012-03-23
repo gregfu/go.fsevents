@@ -2,9 +2,9 @@ package fsevents
 
 /*
 #cgo LDFLAGS: -framework CoreServices
-#include <stdlib.h>
 #include <CoreServices/CoreServices.h>
 FSEventStreamRef fswatch_stream_for_paths(char** paths, int paths_n);
+void fswatch_unwatch_stream(FSEventStreamRef stream);
 */
 import "C"
 import "unsafe"
@@ -14,6 +14,14 @@ var callbackers = make(map[C.FSEventStreamRef]chan []PathEvent)
 type PathEvent struct {
   Path string
   Flags uint32
+}
+
+func Unwatch(ch chan []PathEvent) {
+  for stream, registeredChan := range callbackers {
+    if ch == registeredChan {
+      C.fswatch_unwatch_stream(stream)
+    }
+  }
 }
 
 func WatchPaths(paths []string) chan []PathEvent {

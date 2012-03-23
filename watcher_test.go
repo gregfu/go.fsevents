@@ -62,3 +62,13 @@ func TestOnlyWatchesSpecifiedPaths(t *testing.T) {
     assertReceivedEvents(t, false, ch)
   })
 }
+
+func TestCanUnwatch(t *testing.T) {
+  ch := WatchPaths([]string{"."})
+
+  Unwatch(ch)
+
+  withCreate(func(dummyfile string) {
+    assertReceivedEvents(t, false, ch)
+  })
+}
