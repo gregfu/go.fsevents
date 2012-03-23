@@ -12,6 +12,8 @@ import "unsafe"
 var callbackers = make(map[C.FSEventStreamRef]chan []PathEvent)
 
 type PathEvent struct {
+  Path string
+  Flags uint32
 }
 
 func WatchPaths(paths []string) chan []PathEvent {
@@ -49,10 +51,16 @@ func WatchPaths(paths []string) chan []PathEvent {
 
 //export watchDirsCallback
 func watchDirsCallback(stream C.FSEventStreamRef, count C.size_t, paths **C.char, flags *C.FSEventStreamEventFlags) {
-  ch := callbackers[stream]
-  ch <- nil
+  var events []PathEvent
 
-  //for _, ch := range fileSystemChangeObservers {
-  //  ch <- []PathEvent{}
-  //}
+  for i := 0; i < int(count); i++ {
+    cpaths := uintptr(unsafe.Pointer(paths)) + (uintptr(i) * unsafe.Sizeof(*paths))
+    cpath := *(**C.char)(unsafe.Pointer(cpaths))
+    path := C.GoString(cpath)
+
+    events = append(events, PathEvent{ Path: path })
+  }
+
+  ch := callbackers[stream]
+  ch <- events
 }
