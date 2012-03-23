@@ -18,24 +18,29 @@ func withCreate(action func(string)) {
   os.Remove(dummyfile)
 }
 
-func assertReceivedEvents(t *testing.T, expectingEvents bool, ch chan []PathEvent) {
-  select {
-  case <-ch:
-    if !expectingEvents {
-      t.Errorf("should have timed out, but got some file event")
-    }
-  case <-time.After(time.Second * 1):
-    if expectingEvents {
-      t.Errorf("should have got some file event, but timed out")
-    }
-  }
-}
-
 func TestFileChanges(t *testing.T) {
   ch := WatchPaths([]string{"."})
 
   withCreate(func(dummyfile string) {
-    assertReceivedEvents(t, true, ch)
+    select {
+    case <-ch:
+    case <-time.After(time.Second * 1):
+      t.Errorf("should have got some file event, but timed out")
+    }
+  })
+}
+
+func TestEventFlags(t *testing.T) {
+  ch := WatchPaths([]string{"."})
+
+  withCreate(func(dummyfile string) {
+    select {
+    case events := <-ch:
+      assert.Equals(t, len(events), 1)
+      assert.True(t, events[0].Flags & FlagItemCreated != 0)
+    case <-time.After(time.Second * 1):
+      t.Errorf("should have got some file event, but timed out")
+    }
   })
 }
 
@@ -59,7 +64,11 @@ func TestOnlyWatchesSpecifiedPaths(t *testing.T) {
   ch := WatchPaths([]string{"imaginaryfile"})
 
   withCreate(func(dummyfile string) {
-    assertReceivedEvents(t, false, ch)
+    select {
+    case <-ch:
+      t.Errorf("should have timed out, but got some file event")
+    case <-time.After(time.Second * 1):
+    }
   })
 }
 
@@ -69,6 +78,10 @@ func TestCanUnwatch(t *testing.T) {
   Unwatch(ch)
 
   withCreate(func(dummyfile string) {
-    assertReceivedEvents(t, false, ch)
+    select {
+    case <-ch:
+      t.Errorf("should have timed out, but got some file event")
+    case <-time.After(time.Second * 1):
+    }
   })
 }

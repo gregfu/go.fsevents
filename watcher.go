@@ -9,6 +9,10 @@ void fswatch_unwatch_stream(FSEventStreamRef stream);
 import "C"
 import "unsafe"
 
+const (
+  FlagItemCreated = uint32(C.kFSEventStreamEventFlagItemCreated)
+)
+
 type watchingInfo struct {
   channel chan []PathEvent
   runloop C.CFRunLoopRef
@@ -83,7 +87,14 @@ func watchDirsCallback(stream C.FSEventStreamRef, count C.size_t, paths **C.char
     cpath := *(**C.char)(unsafe.Pointer(cpaths))
     path := C.GoString(cpath)
 
-    events = append(events, PathEvent{ Path: path })
+    cflags := uintptr(unsafe.Pointer(flags)) + (uintptr(i) * unsafe.Sizeof(*flags))
+    cflag := *(*C.FSEventStreamEventFlags)(unsafe.Pointer(cflags))
+    flag := uint32(cflag)
+
+    events = append(events, PathEvent{
+      Path: path,
+      Flags: flag,
+    })
   }
 
   ch := watchers[stream].channel
