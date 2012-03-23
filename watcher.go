@@ -9,7 +9,12 @@ void fswatch_unwatch_stream(FSEventStreamRef stream);
 import "C"
 import "unsafe"
 
-var callbackers = make(map[C.FSEventStreamRef]chan []PathEvent)
+type watchingInfo struct {
+  channel chan []PathEvent
+  runloop C.CFRunLoopRef
+}
+
+var watchers = make(map[C.FSEventStreamRef]watchingInfo)
 
 type PathEvent struct {
   Path string
@@ -17,15 +22,21 @@ type PathEvent struct {
 }
 
 func Unwatch(ch chan []PathEvent) {
-  for stream, registeredChan := range callbackers {
-    if ch == registeredChan {
+  for stream, info := range watchers {
+    if ch == info.channel {
       C.fswatch_unwatch_stream(stream)
+      C.CFRunLoopStop(info.runloop)
     }
   }
 }
 
 func WatchPaths(paths []string) chan []PathEvent {
-  successChan := make(chan C.FSEventStreamRef)
+  type watchSuccessData struct{
+    runloop C.CFRunLoopRef
+    stream C.FSEventStreamRef
+  }
+
+  successChan := make(chan *watchSuccessData)
 
   go func() {
     var cpaths []*C.char
@@ -39,21 +50,27 @@ func WatchPaths(paths []string) chan []PathEvent {
 
     ok := C.FSEventStreamStart(stream) != 0
     if ok {
-      successChan <- stream
+      successChan <- &watchSuccessData{
+        runloop: C.CFRunLoopGetCurrent(),
+        stream: stream,
+      }
       C.CFRunLoopRun()
     } else {
       successChan <- nil
     }
   }()
 
-  stream := <-successChan
+  watchingData := <-successChan
 
-  if stream == nil {
+  if watchingData == nil {
     return nil
   }
 
   newChan := make(chan []PathEvent)
-  callbackers[stream] = newChan
+  watchers[watchingData.stream] = watchingInfo{
+    channel: newChan,
+    runloop: watchingData.runloop,
+  }
   return newChan
 }
 
@@ -69,6 +86,6 @@ func watchDirsCallback(stream C.FSEventStreamRef, count C.size_t, paths **C.char
     events = append(events, PathEvent{ Path: path })
   }
 
-  ch := callbackers[stream]
+  ch := watchers[stream].channel
   ch <- events
 }
