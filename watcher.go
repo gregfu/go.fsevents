@@ -10,7 +10,20 @@ import "C"
 import "unsafe"
 
 const (
+  FlagUnmount = uint32(C.kFSEventStreamEventFlagUnmount)
+  FlagMount = uint32(C.kFSEventStreamEventFlagMount)
+
   FlagItemCreated = uint32(C.kFSEventStreamEventFlagItemCreated)
+  FlagItemRemoved       = uint32(C.kFSEventStreamEventFlagItemRemoved)
+  FlagItemInodeMetaMod  = uint32(C.kFSEventStreamEventFlagItemInodeMetaMod)
+  FlagItemRenamed       = uint32(C.kFSEventStreamEventFlagItemRenamed)
+  FlagItemModified      = uint32(C.kFSEventStreamEventFlagItemModified)
+  FlagItemFinderInfoMod = uint32(C.kFSEventStreamEventFlagItemFinderInfoMod)
+  FlagItemChangeOwner   = uint32(C.kFSEventStreamEventFlagItemChangeOwner)
+  FlagItemXattrMod      = uint32(C.kFSEventStreamEventFlagItemXattrMod)
+  FlagItemIsFile        = uint32(C.kFSEventStreamEventFlagItemIsFile)
+  FlagItemIsDir         = uint32(C.kFSEventStreamEventFlagItemIsDir)
+  FlagItemIsSymlink     = uint32(C.kFSEventStreamEventFlagItemIsSymlink)
 )
 
 type watchingInfo struct {
