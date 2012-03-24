@@ -98,15 +98,13 @@ func watchDirsCallback(stream C.FSEventStreamRef, count C.size_t, paths **C.char
   for i := 0; i < int(count); i++ {
     cpaths := uintptr(unsafe.Pointer(paths)) + (uintptr(i) * unsafe.Sizeof(*paths))
     cpath := *(**C.char)(unsafe.Pointer(cpaths))
-    path := C.GoString(cpath)
 
     cflags := uintptr(unsafe.Pointer(flags)) + (uintptr(i) * unsafe.Sizeof(*flags))
     cflag := *(*C.FSEventStreamEventFlags)(unsafe.Pointer(cflags))
-    flag := uint32(cflag)
 
     events = append(events, PathEvent{
-      Path:  path,
-      Flags: flag,
+      Path:  C.GoString(cpath),
+      Flags: uint32(cflag),
     })
   }
 
