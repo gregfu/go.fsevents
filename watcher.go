@@ -3,7 +3,11 @@ package fsevents
 /*
 #cgo LDFLAGS: -framework CoreServices
 #include <CoreServices/CoreServices.h>
-FSEventStreamRef fswatch_stream_for_paths(char** paths, int paths_n);
+FSEventStreamRef fswatch_stream_for_paths(CFMutableArrayRef pathsToWatch);
+static CFMutableArrayRef fswatch_make_mutable_array() {
+  return CFArrayCreateMutable(NULL, 0, &kCFTypeArrayCallBacks);
+}
+
 */
 import "C"
 import "unsafe"
@@ -65,7 +69,15 @@ func WatchPaths(paths []string) chan []PathEvent {
       cpaths = append(cpaths, path)
     }
 
-    stream := C.fswatch_stream_for_paths(&cpaths[0], C.int(len(cpaths)))
+    pathsToWatch := C.fswatch_make_mutable_array()
+
+    for i := 0; i < len(cpaths); i++ {
+      str := C.CFStringCreateWithCString(nil, cpaths[i], C.kCFStringEncodingUTF8)
+      C.CFArrayAppendValue(pathsToWatch, unsafe.Pointer(str))
+    }
+
+    stream := C.fswatch_stream_for_paths(pathsToWatch)
+    C.FSEventStreamScheduleWithRunLoop(stream, C.CFRunLoopGetCurrent(), C.kCFRunLoopCommonModes)
 
     ok := C.FSEventStreamStart(stream) != 0
     if ok {
