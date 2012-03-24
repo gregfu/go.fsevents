@@ -62,17 +62,14 @@ func WatchPaths(paths []string) chan []PathEvent {
   successChan := make(chan *watchSuccessData)
 
   go func() {
-    var cpaths []*C.char
+    pathsToWatch := C.fswatch_make_mutable_array()
+    defer C.CFRelease(C.CFTypeRef(pathsToWatch))
+
     for _, dir := range paths {
       path := C.CString(dir)
       defer C.free(unsafe.Pointer(path))
-      cpaths = append(cpaths, path)
-    }
 
-    pathsToWatch := C.fswatch_make_mutable_array()
-
-    for i := 0; i < len(cpaths); i++ {
-      str := C.CFStringCreateWithCString(nil, cpaths[i], C.kCFStringEncodingUTF8)
+      str := C.CFStringCreateWithCString(nil, path, C.kCFStringEncodingUTF8)
       C.CFArrayAppendValue(pathsToWatch, unsafe.Pointer(str))
     }
 
