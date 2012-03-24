@@ -108,6 +108,5 @@ func watchDirsCallback(stream C.FSEventStreamRef, count C.size_t, paths **C.char
     })
   }
 
-  ch := watchers[stream].channel
-  ch <- events
+  watchers[stream].channel <- events
 }
