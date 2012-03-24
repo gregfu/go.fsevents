@@ -24,9 +24,3 @@ FSEventStreamRef fswatch_stream_for_paths(char** paths, int paths_n) {
 
   return stream;
 }
-
-void fswatch_unwatch_stream(FSEventStreamRef stream) {
-  FSEventStreamStop(stream);
-  FSEventStreamInvalidate(stream);
-  FSEventStreamRelease(stream);
-}

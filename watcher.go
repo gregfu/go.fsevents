@@ -4,7 +4,6 @@ package fsevents
 #cgo LDFLAGS: -framework CoreServices
 #include <CoreServices/CoreServices.h>
 FSEventStreamRef fswatch_stream_for_paths(char** paths, int paths_n);
-void fswatch_unwatch_stream(FSEventStreamRef stream);
 */
 import "C"
 import "unsafe"
@@ -42,7 +41,9 @@ type PathEvent struct {
 func Unwatch(ch chan []PathEvent) {
   for stream, info := range watchers {
     if ch == info.channel {
-      C.fswatch_unwatch_stream(stream)
+      C.FSEventStreamStop(stream)
+      C.FSEventStreamInvalidate(stream)
+      C.FSEventStreamRelease(stream)
       C.CFRunLoopStop(info.runloop)
     }
   }
