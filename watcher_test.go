@@ -1,7 +1,7 @@
 package fsevents
 
 import "testing"
-import "github.com/sdegutis/assert"
+import "github.com/sdegutis/go.assert"
 
 import (
   "os"
